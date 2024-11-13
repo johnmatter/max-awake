@@ -80,8 +80,8 @@ class Sequencer {
     return this.notes[this.position];
   }
 
-  setNote(note) {
-    this.notes[this.position] = note;
+  setNote(index, note) {
+    this.notes[index] = note;
   }
 }
 
@@ -134,6 +134,11 @@ class Awake {
       // Get current indices from all sequences
       const indices = this.sequences.map(seq => seq.getNote());
 
+      // If the first sequence is 0 for this step, return null
+      if (indices[0] === 0) {
+        return null;
+      }
+
       // Create an evaluation context with sequence values
       const context = {};
       'abcdefghijk'.split('').forEach((letter, i) => {
@@ -146,7 +151,7 @@ class Awake {
       // Map the result to a note in our scale
       const note = this.scale[Math.abs(Math.round(resultIndex)) % this.scale.length];
       
-      post(`(expr: ${this.expression}) = ${resultIndex} -> ${note}\n`);
+      // post(`(expr: ${this.expression}) = ${resultIndex} -> ${note}\n`);
       return note;
     } catch (err) {
       post(`(expr: ${this.expression}) ERROR: ${err.message}\n`);
@@ -187,8 +192,8 @@ class Awake {
     return this.sequences.map(seq => seq.notes);
   }
 
-  setNote(seqIndex, note) {
-    this.sequences[seqIndex].setNote(note);
+  setNote(seqIndex, index, note) {
+    this.sequences[seqIndex].setNote(index, note);
   }
 
   setSequence(seqIndex, sequence) {
@@ -231,7 +236,10 @@ var awake = new Awake();
 function bang() {
   if (inlet === 0) {
     // Output the current note value
-    outlet(0, awake.getNote());
+    const note = awake.getNote();
+    if (note !== null) {
+      outlet(0, note);
+    }
 
     // Advance sequences
     awake.sequences.forEach(seq => seq.advance());
@@ -266,3 +274,11 @@ function getSequences() {
 function dump() {
   awake.dump();
 }
+
+function setNote(seqIndex, index, note) {
+  awake.setNote(seqIndex, index, note);
+}
+
+function setSequence(seqIndex, sequence) {
+  awake.setSequence(seqIndex, sequence);
+} 
