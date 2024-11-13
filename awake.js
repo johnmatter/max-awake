@@ -195,8 +195,32 @@ class Awake {
     this.sequences[seqIndex] = new Sequencer(sequence);
   }
 
+  getStateDictionary() {
+    // Create a serialized dictionary string that dict.deserialize can read
+    const parts = [];
+    
+    // Add scale information
+    parts.push(`root : ${this.rootNote}`);
+    parts.push(`scale_type : ${this.scaleType}`);
+    parts.push(`scale_length : ${this.scaleLength}`);
+    
+    // Number of sequences
+    parts.push(`num_sequences : ${this.sequences.length}`);
+
+    // Add sequences
+    this.sequences.forEach((seq, index) => {
+      parts.push(`sequence_${index} : ${seq.notes.join(" ")}`);
+    });
+    
+    // Add expression
+    parts.push(`expression : ${this.expression}`);
+    
+    return parts.join(" ");
+  }
+
   dump() {
-    outlet(1, `${JSON.stringify(this.sequences)}`);
+    const dictString = this.getStateDictionary();
+    outlet(1, dictString);
   }
 }
 
@@ -215,7 +239,7 @@ function bang() {
 }
 
 // handlers for messages
-function expr(expression) {
+function setExpression(expression) {
   if (inlet === 0) {
     awake.setExpression(expression);
   }
